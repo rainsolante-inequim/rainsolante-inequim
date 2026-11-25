@@ -1,0 +1,31 @@
+name: Generate cat graph
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"    # every 6 hours
+  workflow_dispatch:          # lets you run it by hand
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  cat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node generate-cat.mjs
+        env:
+          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save the svg
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/cat.svg
+          git diff --cached --quiet || git commit -m "Update cat graph"
+          git push
